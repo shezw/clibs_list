@@ -1,7 +1,7 @@
 
 #include <stdio.h>
 #include "bench/bench.h"
-#include "src/list.h"
+#include "src/clist.h"
 
 static void
 bm(char *label, void (*fn)()) {

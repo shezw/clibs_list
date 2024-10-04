@@ -5,16 +5,16 @@
 // Copyright (c) 2010 TJ Holowaychuk <tj@vision-media.ca>
 //
 
-#include "list.h"
+#include "clist.h"
 
 /*
- * Allocate a new list_t. NULL on failure.
+ * Allocate a new clist_t. NULL on failure.
  */
 
-list_t *
-list_new(void) {
-  list_t *self;
-  if (!(self = LIST_MALLOC(sizeof(list_t))))
+clist_t *
+clist_new(void) {
+  clist_t *self;
+  if (!(self = CLIST_MALLOC(sizeof(clist_t))))
     return NULL;
   self->head = NULL;
   self->tail = NULL;
@@ -30,19 +30,19 @@ list_new(void) {
  */
 
 void
-list_destroy(list_t *self) {
+clist_destroy(clist_t *self) {
   unsigned int len = self->len;
-  list_node_t *next;
-  list_node_t *curr = self->head;
+  clist_node_t *next;
+  clist_node_t *curr = self->head;
 
   while (len--) {
     next = curr->next;
     if (self->free) self->free(curr->val);
-    LIST_FREE(curr);
+    CLIST_FREE(curr);
     curr = next;
   }
 
-  LIST_FREE(self);
+  CLIST_FREE(self);
 }
 
 /*
@@ -52,8 +52,8 @@ list_destroy(list_t *self) {
  * @node: the node to push
  */
 
-list_node_t *
-list_rpush(list_t *self, list_node_t *node) {
+clist_node_t *
+clist_rpush(clist_t *self, clist_node_t *node) {
   if (!node) return NULL;
 
   if (self->len) {
@@ -75,11 +75,11 @@ list_rpush(list_t *self, list_node_t *node) {
  * @self: Pointer to the list for popping node
  */
 
-list_node_t *
-list_rpop(list_t *self) {
+clist_node_t *
+clist_rpop(clist_t *self) {
   if (!self->len) return NULL;
 
-  list_node_t *node = self->tail;
+  clist_node_t *node = self->tail;
 
   if (--self->len) {
     (self->tail = node->prev)->next = NULL;
@@ -96,11 +96,11 @@ list_rpop(list_t *self) {
  * @self: Pointer to the list for popping node
  */
 
-list_node_t *
-list_lpop(list_t *self) {
+clist_node_t *
+clist_lpop(clist_t *self) {
   if (!self->len) return NULL;
 
-  list_node_t *node = self->head;
+  clist_node_t *node = self->head;
 
   if (--self->len) {
     (self->head = node->next)->prev = NULL;
@@ -119,8 +119,8 @@ list_lpop(list_t *self) {
  * @node: the node to push
  */
 
-list_node_t *
-list_lpush(list_t *self, list_node_t *node) {
+clist_node_t *
+clist_lpush(clist_t *self, clist_node_t *node) {
   if (!node) return NULL;
 
   if (self->len) {
@@ -143,26 +143,26 @@ list_lpush(list_t *self, list_node_t *node) {
  * @val: Value to find 
  */
 
-list_node_t *
-list_find(list_t *self, void *val) {
-  list_iterator_t *it = list_iterator_new(self, LIST_HEAD);
-  list_node_t *node;
+clist_node_t *
+clist_find(clist_t *self, void *val) {
+  clist_iterator_t *it = clist_iterator_new(self, CLIST_HEAD);
+  clist_node_t *node;
 
-  while ((node = list_iterator_next(it))) {
+  while ((node = clist_iterator_next(it))) {
     if (self->match) {
       if (self->match(val, node->val)) {
-        list_iterator_destroy(it);
+        clist_iterator_destroy(it);
         return node;
       }
     } else {
       if (val == node->val) {
-        list_iterator_destroy(it);
+        clist_iterator_destroy(it);
         return node;
       }
     }
   }
 
-  list_iterator_destroy(it);
+  clist_iterator_destroy(it);
   return NULL;
 }
 
@@ -172,20 +172,20 @@ list_find(list_t *self, void *val) {
  * @index: the index of node in the list
  */
 
-list_node_t *
-list_at(list_t *self, int index) {
-  list_direction_t direction = LIST_HEAD;
+clist_node_t *
+clist_at(clist_t *self, int index) {
+  clist_direction_t direction = CLIST_HEAD;
 
   if (index < 0) {
-    direction = LIST_TAIL;
+    direction = CLIST_TAIL;
     index = ~index;
   }
 
   if ((unsigned)index < self->len) {
-    list_iterator_t *it = list_iterator_new(self, direction);
-    list_node_t *node = list_iterator_next(it);
-    while (index--) node = list_iterator_next(it);
-    list_iterator_destroy(it);
+    clist_iterator_t *it = clist_iterator_new(self, direction);
+    clist_node_t *node = clist_iterator_next(it);
+    while (index--) node = clist_iterator_next(it);
+    clist_iterator_destroy(it);
     return node;
   }
 
@@ -199,7 +199,7 @@ list_at(list_t *self, int index) {
  */
 
 void
-list_remove(list_t *self, list_node_t *node) {
+clist_remove(clist_t *self, clist_node_t *node) {
   node->prev
     ? (node->prev->next = node->next)
     : (self->head = node->next);
@@ -210,6 +210,6 @@ list_remove(list_t *self, list_node_t *node) {
 
   if (self->free) self->free(node->val);
 
-  LIST_FREE(node);
+  CLIST_FREE(node);
   --self->len;
 }
